@@ -1,0 +1,28 @@
+services:
+  app:
+    image: hyperf-skeleton  
+    volumes:
+      - ./:/opt/www
+    ports:
+      - 9501:9501
+    environment:
+      - APP_ENV=dev
+      - SCAN_CACHEABLE=false
+
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: pix_manager
+    ports:
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+
+networks:
+  default:
+    name: hyperf-skeleton
+
+volumes:
+  db_data:
+    driver: local
