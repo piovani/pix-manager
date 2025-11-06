@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Model;
 
-use Hyperf\DbConnection\Model\Model;
+use Hyperf\DbConnection\Model\Model; 
 
 /**
  */
 class AccountWithdraw extends Model
 {
-    protected ?string $table = 'AccountWithdraw';
+    protected ?string $table = 'accounts_withdraw';
 
     public bool $incrementing = false;
 

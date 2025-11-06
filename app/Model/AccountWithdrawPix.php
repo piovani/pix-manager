@@ -10,7 +10,7 @@ use Hyperf\DbConnection\Model\Model;
  */
 class AccountWithdrawPix extends Model
 {
-    protected ?string $table = 'AccountWithdrawPix';
+    protected ?string $table = 'accounts_withdraw_pix';
 
     public bool $incrementing = false;
 

@@ -21,15 +21,11 @@ class AccountController extends AbstractController
         $data = $request->validated();
         $data['id'] = $id;
 
-        if ($res = $this->service->withdraw($data)) {
-            return $this->response->json([
-                'message' => 'Withdraw successful',
-                'res' => $res
-            ])->withStatus(200);
-        } else {
-            return $this->response->json([
-                'message' => 'Withdraw failed'
-            ])->withStatus(500);
+        $res = $this->service->withdraw($data);
+
+        if (isset($res['error'])) {
+            return $this->response->json(['message' => $res['error']])->withStatus(403);
         }
+        return $this->response->json(['message' => 'Withdraw successful'])->withStatus(200);
     }
 }

@@ -8,7 +8,7 @@ use Hyperf\DbConnection\Model\Model;
 
 class Account extends Model
 {
-    protected ?string $table = 'Account';
+    protected ?string $table = 'accounts';
     
     public bool $incrementing = false;
 
@@ -29,4 +29,9 @@ class Account extends Model
         'name' => 'string', 
         'balance' => 'float'
     ];
+
+    public function hasValue(float $amount): bool
+    {
+        return $this->balance >= $amount;
+    }
 }

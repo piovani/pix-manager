@@ -5,25 +5,58 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Account;
+use App\Model\AccountWithdraw;
+use App\Model\AccountWithdrawPix;
+use Ramsey\Uuid\Uuid;
+use Hyperf\DbConnection\Db;
 
 class Withdraw
 {
     public function withdraw(array $data)
     {
-    /*
-        * A operação do saque deve ser registrada no banco de dados, usando as tabelas account_withdraw e account_withdraw_pix.
-        * O saque sem agendamento deve realizar o saque de imediato.
-        * O saque com agendamento deve ser processado somente via cron (mais detalhes abaixo).
-        * O saque deve deduzir o saldo da conta na tabela account .
-        * Atualmente só existe a opção de saque via PIX, podendo ser somente para chaves do tipo email. A implementação deve possibilitar uma fácil expansão de outras formas de saque no futuro.
-        * Não é permitido sacar um valor maior do que o disponível no saldo da conta digital.
-        * O saldo da conta não pode ficar negativo.
-        * Para saque agendado, não é permitido agendar para um momento no passado.
-    */
+        if (!isset($data['id'])) {
+            return ['error' => 'Account id ausente.'];
+        }
 
+        $account = Account::query()->findOrFail($data['id']);
 
+        if (!$account->hasValue((float)$data['amount'])) {
+            return ['error'=> 'Saldo insuficiente para saque.'];
+        }
 
-        return $data;
+        DB::beginTransaction();
+
+        $idWithdra = Uuid::uuid4()->toString();
+
+        AccountWithdraw::create([
+            'id' => $idWithdra,
+            'account_id' => $data['id'],
+            'method' => $data['method'],
+            'amount' => (float)$data['amount'],
+            'scheduled' => isset($data['schedule']),
+        ])->save();
+
+        if ($data['method'] === 'PIX') {
+            AccountWithdrawPix::create([
+                'id' => Uuid::uuid4()->toString(),
+                'accounts_withdraw_id' => $idWithdra,
+                'key' => $data['pix']['key'],
+            ])->save();
+        }
+
+        if (!isset($data['schedule'])) {
+            $this->accountWithdraw($account, (float)$data['amount']);
+        }
+
+        DB::commit();
+
+        return [];
+    }
+
+    public function accountWithdraw(Account $account, float $amount): void
+    {
+        $account->balance -= $amount;
+        $account->save();
     }
 
 }
