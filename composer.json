@@ -25,6 +25,7 @@
         "hyperf/logger": "~3.1.0",
         "hyperf/memory": "~3.1.0",
         "hyperf/process": "~3.1.0",
+        "hyperf/validation": "^3.1",
         "ramsey/uuid": "^4.9",
         "runtime/swoole": "^0.4.0"
     },
@@ -32,6 +33,7 @@
         "friendsofphp/php-cs-fixer": "^3.0",
         "hyperf/devtool": "~3.1.0",
         "hyperf/testing": "~3.1.0",
+        "hyperf/watcher": "^3.1",
         "mockery/mockery": "^1.0",
         "phpstan/phpstan": "^1.0",
         "swoole/ide-helper": "^5.0"
