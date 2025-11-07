@@ -28,35 +28,17 @@ class PixScheduleCommand extends HyperfCommand
 
     public function handle()
     {
+        $service = new Withdraw();
         $this->line('Cheking PIXs!', 'info');
 
         AccountWithdraw::where('method', 'PIX')
             ->where('scheduled', true)
             ->where('done', false)
             ->get()
-            ->each(function (AccountWithdraw $withdraw) {
-                $service = new Withdraw();
-
+            ->each(function (AccountWithdraw $withdraw, Withdraw $service) {
                 DB::beginTransaction();
-
-                $account = Account::query()->findOrFail($withdraw->account_id);
-
-                if (!$account->hasValue((float)$withdraw->amount)) {
-                    $withdraw->done = true;
-                    $withdraw->error = true;
-                    $withdraw->error_reason = 'Saldo insuficiente para saque agendado.';
-                    $withdraw->save();
-
-                    $this->line("Insufficient funds for scheduled PIX withdraw {$withdraw->id} for account {$account->id}", 'error');
-
-                    DB::commit();
-                    return;
-                }
-
-                $service->accountWithdraw($withdraw, $account, (float)$withdraw->amount);
-                $withdraw->done = true;
-                $withdraw->save();
-
+                $account = $service->getAccountById($withdraw->account_id);
+                $service->WithdrawFromAccount($account, $withdraw);
                 DB::commit();
 
                 $this->line("Processed PIX withdraw {$withdraw->id} for account {$account->id}", 'info');

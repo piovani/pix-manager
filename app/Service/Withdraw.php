@@ -14,17 +14,14 @@ class Withdraw
 {
     public function withdraw(array $data)
     {
-        if (!isset($data['id'])) {
-            return ['error' => 'Account id ausente.'];
+        $account = $this->getAccountById($data['id']);
+        if ($account === null) {
+            return ['error' => 'Conta não encontrada.'];
         }
-
-        $account = Account::query()->findOrFail($data['id']);
 
         if (!$account->hasValue((float)$data['amount'])) {
             return ['error'=> 'Saldo insuficiente para saque.'];
         }
-
-        $scheduleDate  = null;
 
         if (isset($data['schedule'])) {
             try {
@@ -37,23 +34,18 @@ class Withdraw
 
         DB::beginTransaction();
 
-        $idWithdra = Uuid::uuid4()->toString();
-        $withdraw = AccountWithdraw::create([
-            'id' => $idWithdra,
-            'account_id' => $data['id'],
-            'method' => $data['method'],
-            'amount' => (float)$data['amount'],
-            'scheduled' => is_null($scheduleDate) ? false : true,
-            'done' => is_null($scheduleDate) ? false : true,
-        ]);
-        $withdraw->save();
-
+        $withdraw = $this->createAccountWithdraw(
+            $account,
+            $data['amount'],
+            $data['method'],
+            $data['schedule'] ?? null
+        );
+    
         if ($data['method'] === 'PIX') {
-            AccountWithdrawPix::create([
-                'id' => Uuid::uuid4()->toString(),
-                'accounts_withdraw_id' => $idWithdra,
-                'key' => $data['pix']['key'],
-            ])->save();
+            $withdrawPix = $this->createAccountWithdrawPix(
+                $withdraw,
+                $data['pix']['key']
+            );
         }
 
         if (is_null($scheduleDate)) {
@@ -66,11 +58,22 @@ class Withdraw
         return [];
     }
 
-    public function accountWithdraw(AccountWithdraw $withdraw, Account $account, float $amount): void
+    public function WithdrawFromAccount(Account $account, Withdraw $withdraw): void
     {
-        $account->balance -= $amount;
-        $account->save();
-        $this->notification($withdraw);
+        $account->balance -= $withdraw->amount;
+        $withdraw->done = true;
+        if ($account->save()) {
+            $this->notification($withdraw);
+        } else {
+            $this->withdraw->error = true;
+            $this->withdraw->error_reason = 'Erro ao processar saque.';
+        }
+        $withdraw->save();
+    }
+
+    public function getAccountById(string $id): ?Account
+    {
+        return Account::query()->find($id);
     }
 
     private function notification(AccountWithdraw $withdraw): void
@@ -98,4 +101,28 @@ class Withdraw
         @mail($to, $subject, $message, $headers);
     }
 
+    private function createAccountWithdraw(Account $account, string $amount, string $method, ?string $scheduled): ?AccountWithdraw
+    {
+        $withdraw = AccountWithdraw::create([
+            'id' => Uuid::uuid4()->toString(),
+            'account_id' => $account->id,
+            'method' => $method,
+            'amount' => (float)$amount,
+            'scheduled' => is_null($scheduled) ? false : true,
+            'done' => is_null($scheduled) ? false : true,
+        ]);
+        $withdraw->save();
+        return $withdraw;
+    }
+
+    private function createAccountWithdrawPix(AccountWithdraw $withdraw, string $key): ?AccountWithdrawPix
+    {
+        $withdrawPix = AccountWithdrawPix::create([
+            'id' => Uuid::uuid4()->toString(),
+            'accounts_withdraw_id' => $withdraw->id,
+            'key' => $key,
+        ]);
+        $withdrawPix->save();
+        return $withdrawPix;
+    }
 }
