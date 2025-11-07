@@ -19,12 +19,14 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('name');
             $table->decimal('balance',10,2)->default(0);
+            $table->string ('email')->nullable();
         });
 
         DB::table($tableName)->insert([
             'id' => Uuid::uuid4()->toString(),
             'name' => 'Usuario Padrao',
             'balance' => 1000.00,
+            'email'=> 'fulano@siclano.com',
         ]);
     }
 

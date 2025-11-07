@@ -19,6 +19,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
 
+  mailhog:
+    platform: linux/amd64
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+
 networks:
   default:
     name: hyperf-skeleton

@@ -1,0 +1,40 @@
+{
+	"info": {
+		"_postman_id": "7394af17-adf5-4f8b-8cb9-7f59eea8e6b0",
+		"name": "pix-manager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "3498184"
+	},
+	"item": [
+		{
+			"name": "withdraw",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"method\": \"PIX\",\n    \"pix\": {\n        \"type\": \"email\",\n        \"key\": \"fulano@email.com\"\n    },\n    \"amount\": 150.75,\n    \"schedule\": \"2026-11-06 18:30\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:9501/account/5ea7619e-64e9-45c4-bc1d-3c9e9e1f4944/balance/withdraw",
+					"host": [
+						"localhost"
+					],
+					"port": "9501",
+					"path": [
+						"account",
+						"5ea7619e-64e9-45c4-bc1d-3c9e9e1f4944",
+						"balance",
+						"withdraw"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
